@@ -3,7 +3,7 @@
 This repository provides the official PyTorch implementation for the CVPR 2025 paper:  
 **MMRL: Multi-Modal Representation Learning for Vision-Language Models**  
 
-📄 [Arxiv Paper Link](https://arxiv.org/pdf/2503.08497)  
+📄 [arXiv Paper Link](https://arxiv.org/pdf/2503.08497)  
 
 ## 🔧 Installation  
 
