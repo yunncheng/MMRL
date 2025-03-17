@@ -1,15 +1,52 @@
-# MMRL: Multi-Modal Representation Learning for Vision-Language Models  
+# MMRL: Multi-Modal Representation Learning for Vision-Language Models (CVPR2025)
 
 This repository provides the official PyTorch implementation for the CVPR 2025 paper:  
 **MMRL: Multi-Modal Representation Learning for Vision-Language Models**  
 
-📄 [arXiv Paper Link](https://arxiv.org/abs/2503.08497)  
+📄 [arXiv Paper Link](https://arxiv.org/abs/2503.08497)
 
 ## 🔧 Installation  
 
-MMRL is built upon [CoOp](https://github.com/KaiyangZhou/CoOp) and [MaPLe](https://github.com/muzairkhattak/multimodal-prompt-learning).  
+MMRL builds upon [CoOp](https://github.com/KaiyangZhou/CoOp) and [MaPLe](https://github.com/muzairkhattak/multimodal-prompt-learning). Please refer to the [CoOp](https://github.com/KaiyangZhou/CoOp) repository for dataset setup instructions. We sincerely appreciate their contributions!
 
-To set up the runtime environment and install the required datasets, please follow the instructions in the [CoOp repository](https://github.com/KaiyangZhou/CoOp). We sincerely appreciate their contributions!  
+To set up the runtime environment, you can follow the guidelines provided in the [CoOp](https://github.com/KaiyangZhou/CoOp) repository or use the step-by-step instructions below (recommended) to create and configure your environment.
+
+* Setup conda environment (recommended).
+```bash
+# Create a conda environment
+conda create -y -n mmrl python=3.10
+
+# Activate the environment
+conda activate mmrl
+
+# Install torch (requires version >= 1.8.1) and torchvision
+# Please refer to https://pytorch.org/ if you need a different cuda version
+pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
+```
+
+* Install [Dassl](https://github.com/KaiyangZhou/Dassl.pytorch) library.
+```bash
+# Instructions borrowed from https://github.com/KaiyangZhou/Dassl.pytorch#installation
+
+# Clone this repo
+git clone https://github.com/KaiyangZhou/Dassl.pytorch.git
+cd Dassl.pytorch/
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install this library (no need to re-build if the source code is modified)
+python setup.py develop
+cd ..
+```
+
+* Clone MMRL code repository
+```bash
+git clone https://github.com/yunncheng/MMRL.git
+cd MMRL/
+```
+
+
 
 ## 🚀 Running the Code  
 
