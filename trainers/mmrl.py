@@ -163,13 +163,10 @@ class MultiModalRepresentationLearner(nn.Module):
         for text in classnames:
             tokens = clip.tokenize(template.format(text.replace('_', ' ')))  # (n_tokens)
             tokenized_prompts.append(tokens)
-        tokenized_prompts = torch.cat(tokenized_prompts)  # (n_classes, n_tokens)
+        self.tokenized_prompts = torch.cat(tokenized_prompts)  # (n_classes, n_tokens)
 
         with torch.no_grad():
-            prompt_embeddings = clip_model.token_embedding(tokenized_prompts).type(self.dtype) # (n_classes, n_tokens, embed_dim)
-        self.prompt_embeddings = prompt_embeddings.cuda()
-        self.tokenized_prompts = tokenized_prompts
-
+            self.prompt_embeddings = clip_model.token_embedding(self.tokenized_prompts).type(self.dtype) # (n_classes, n_tokens, embed_dim)
 
         self.compound_rep_tokens = nn.Parameter(torch.empty(n_rep_tokens, rep_dim))
         nn.init.normal_(self.compound_rep_tokens, std=0.02)
@@ -180,7 +177,6 @@ class MultiModalRepresentationLearner(nn.Module):
         self.compound_rep_tokens_r2vproj = _get_clones(single_layer_r2v, self.rep_layers_length)
         self.compound_rep_tokens_r2tproj = _get_clones(single_layer_r2t, self.rep_layers_length)
        
-
 
     def forward(self):
         compound_rep_tokens_visual = []
@@ -205,7 +201,7 @@ class CustomCLIP(nn.Module):
         self.classnames = classnames
         self.representation_learner = MultiModalRepresentationLearner(cfg, classnames, clip_model).type(clip_model.dtype)
         self.tokenized_prompts = self.representation_learner.tokenized_prompts
-        self.prompt_embeddings = self.representation_learner.prompt_embeddings
+        self.register_buffer("prompt_embeddings", self.representation_learner.prompt_embeddings)
         self.image_encoder = clip_model.visual
         self.text_encoder = TextEncoder_MMRL(clip_model)
         self.dtype = clip_model.dtype
@@ -273,6 +269,7 @@ class MMRL(TrainerX):
     def build_model(self):
         cfg = self.cfg
         classnames = self.dm.dataset.classnames
+        self.num_classes = len(classnames)
 
         print(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg, "MMRL")
@@ -356,6 +353,7 @@ class MMRL(TrainerX):
                     image_features_clip = image_features_clip / image_features_clip.norm(dim=-1, keepdim=True)
                           
                 logits, logits_rep, logits_fusion, image_features, text_features = model(image)
+                text_features = text_features[0:self.num_classes] #Crop the returned text_features for multi-GPU compatibility
 
                 loss = self.criterion(logits, logits_rep, 
                                       image_features, text_features, 
@@ -372,6 +370,8 @@ class MMRL(TrainerX):
                 image_features_clip = image_features_clip / image_features_clip.norm(dim=-1, keepdim=True)
 
             logits, logits_rep, logits_fusion, image_features, text_features = model(image)
+            text_features = text_features[0:self.num_classes] #Crop the returned text_features for multi-GPU compatibility
+            
             loss = self.criterion(logits, logits_rep, 
                                     image_features, text_features, 
                                     image_features_clip, self.text_features_clip, 
@@ -480,7 +480,8 @@ class MMRL(TrainerX):
             checkpoint = load_checkpoint(model_path)
             state_dict = checkpoint["state_dict"]
             epoch = checkpoint["epoch"]
+            state_dict = {k: v for k, v in state_dict.items() if "prompt_embeddings" not in k}
 
             print("Loading weights to {} " 'from "{}" (epoch = {})'.format(name, model_path, epoch))
             # set strict=False
-            self._models[name].load_state_dict(state_dict, strict=True)
+            self._models[name].load_state_dict(state_dict, strict=False)
