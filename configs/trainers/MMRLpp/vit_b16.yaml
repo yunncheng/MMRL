@@ -30,10 +30,13 @@ MODEL:
     NAME: "ViT-B/16"
 
 TRAINER:
-  MMRL:
+  MMRLpp:
     ALPHA: 0.7
+    BETA: 0.9
     REG_WEIGHT: 1.0
     N_REP_TOKENS: 5
     REP_LAYERS: [6, 7, 8, 9, 10, 11, 12]
     PREC: "amp"
     REP_DIM: 512
+    PROJ_LORA_DIM: 64
+    RES_LORA_DIM: 4

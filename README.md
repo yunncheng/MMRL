@@ -1,13 +1,25 @@
-# MMRL: Multi-Modal Representation Learning for Vision-Language Models (CVPR2025)
+# MMRL: Multi-Modal Representation Learning for Vision-Language Models (CVPR2025) & MMRL++: Parameter-Efficient and Interaction-Aware Representation Learning for Vision-Language Models (arXiv)
 
-This repository provides the official PyTorch implementation for the CVPR 2025 paper:  
+This repository provides the official PyTorch implementation for our CVPR 2025 paper:  
 **MMRL: Multi-Modal Representation Learning for Vision-Language Models**  
+and our arXiv extension:  
+**MMRL++: Parameter-Efficient and Interaction-Aware Representation Learning for Vision-Language Models**
 
-📄 [arXiv Paper Link](https://arxiv.org/abs/2503.08497)
+📄 [MMRL Paper Link](https://arxiv.org/abs/2503.08497)  
+📄 [MMRL++ Paper Link](https://arxiv.org/abs/2505.10088)
+
+## 📰 News
+
+- 🗓️ 2025/05/21: MMRL++ code is released!  
+- 🗓️ 2025/05/15: MMRL++ arXiv version is available.  
+- 🗓️ 2025/03/11: MMRL arXiv version is available.  
+- 🗓️ 2025/03/04: MMRL code is released!  
+- 🗓️ 2025/02/27: MMRL is accepted by CVPR 2025 🎉  
+
 
 ## 🔧 Installation  
 
-MMRL builds upon [CoOp](https://github.com/KaiyangZhou/CoOp) and [MaPLe](https://github.com/muzairkhattak/multimodal-prompt-learning). Please refer to the [CoOp](https://github.com/KaiyangZhou/CoOp) repository for dataset setup instructions. We sincerely appreciate their contributions!
+MMRL and MMRL++ build upon [CoOp](https://github.com/KaiyangZhou/CoOp) and [MaPLe](https://github.com/muzairkhattak/multimodal-prompt-learning). Please refer to the [CoOp](https://github.com/KaiyangZhou/CoOp) repository for dataset setup instructions. We sincerely appreciate their contributions!
 
 To set up the runtime environment, you can follow the guidelines provided in the [CoOp](https://github.com/KaiyangZhou/CoOp) repository or use the step-by-step instructions below (recommended) to create and configure your environment.
 
@@ -55,9 +67,9 @@ We provide various scripts for different experimental settings. The main scripts
 - `base_to_novel.sh` (Base-to-Novel Generalization)
 - `cross_datasets.sh` (Cross-Dataset Evaluation and Domain Generalization)
 - `few_shot.sh` (Few-Shot Learning)
-- Detailed bash scripts in `scripts/mmrl`
+- Detailed bash scripts in `scripts/mmrl` and `scripts/mmrlpp`
 
-To run the experiments, navigate to the MMRL root directory and execute the corresponding script. Make sure to replace `DATA` with the path to your dataset in `scripts/mmrl`.  
+To run the experiments, navigate to the MMRL root directory and execute the corresponding script. Make sure to replace `DATA` with the path to your dataset in `scripts/mmrl` and `scripts/mmrlpp`.  
 ### **Base-to-Novel Generalization**  
 
 Run the following command:  
@@ -70,6 +82,8 @@ You can modify configurations in:
 - `trainer/config.py`  
 - `configs/trainers/MMRL/vit_b16.yaml`  
 - `configs/trainers/MMRL/vit_b16_imagenet.yaml`  
+- `configs/trainers/MMRLpp/vit_b16.yaml`  
+- `configs/trainers/MMRLpp/vit_b16_imagenet.yaml`  
 
 ### **Cross-Dataset Evaluation and Domain Generalization**  
 
@@ -80,11 +94,13 @@ bash cross_datasets.sh
 ```
 
 You can adjust configurations in:  
+- `trainer/config.py`  
 - `configs/trainers/MMRL/vit_b16_cross_datasets.yaml`  
+- `configs/trainers/MMRLpp/vit_b16_cross_datasets.yaml`  
 - `scripts/mmrl/cross_datasets_train.sh`  
-- `scripts/mmrl/cross_datasets_test.sh`  
+- `scripts/mmrl/cross_datasets_test.sh`   
 
-**Note:** Ensure that the `REP_DIM` value remains consistent between training on ImageNet and testing on other datasets.  
+**Note:** Ensure that the `REP_DIM` value remains consistent between training on ImageNet and testing on other datasets when runing MMRL.  
 
 ### **Few-Shot Learning**  
 
@@ -98,6 +114,20 @@ Configurations can be adjusted in:
 - `trainer/config.py`
 - `configs/trainers/MMRL/vit_b16_few_shot.yaml`
 - `configs/trainers/MMRL/vit_b16_imagenet.yaml`
+- `configs/trainers/MMRLpp/vit_b16_few_shot.yaml`
+- `configs/trainers/MMRLpp/vit_b16_imagenet.yaml`
+
+
+
+## ✨ MMRL++
+
+MMRL++ is an extension of MMRL that introduces:
+- **Shared-Residual Representation Aligner (SRRA):** A parameter-efficient design for gradient and information sharing.
+- **Progressive Representation Composition (PRC):** Enhances intra-modal interaction via inter-layer instance-specific semantic flow.
+
+It achieves stronger generalization with fewer trainable parameters while maintaining or improving performance across multiple benchmarks.
+
+📄 Read the MMRL++ paper here: [https://arxiv.org/abs/2505.10088](https://arxiv.org/abs/2505.10088)
 
 ## 📌 Citation  
 
@@ -112,5 +142,15 @@ If you find this repository useful for your research, please consider citing:
       archivePrefix={arXiv},
       primaryClass={cs.LG},
       url={https://arxiv.org/abs/2503.08497}, 
+}
+
+@misc{guo2025mmrlparameterefficientinteractionawarerepresentation,
+      title={MMRL++: Parameter-Efficient and Interaction-Aware Representation Learning for Vision-Language Models}, 
+      author={Yuncheng Guo and Xiaodong Gu},
+      year={2025},
+      eprint={2505.10088},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2505.10088}, 
 }
 ```

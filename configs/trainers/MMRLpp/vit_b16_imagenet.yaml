@@ -1,6 +1,6 @@
 DATALOADER:
   TRAIN_X:
-    BATCH_SIZE: 4
+    BATCH_SIZE: 32
   TEST:
     BATCH_SIZE: 250
   NUM_WORKERS: 8
@@ -16,7 +16,7 @@ INPUT:
 OPTIM:
   NAME: "adamw"
   LR: 0.001
-  MAX_EPOCH: 10
+  MAX_EPOCH: 5
   LR_SCHEDULER: "cosine"
   WARMUP_EPOCH: 1
   WARMUP_TYPE: "constant"
@@ -30,10 +30,13 @@ MODEL:
     NAME: "ViT-B/16"
 
 TRAINER:
-  MMRL:
+  MMRLpp:
     ALPHA: 0.7
+    BETA: 0.9
     REG_WEIGHT: 1.0
     N_REP_TOKENS: 5
     REP_LAYERS: [6, 7, 8, 9, 10, 11, 12]
     PREC: "amp"
     REP_DIM: 512
+    PROJ_LORA_DIM: 64
+    RES_LORA_DIM: 4

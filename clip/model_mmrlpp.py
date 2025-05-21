@@ -6,6 +6,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+import math
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -165,7 +166,7 @@ class QuickGELU(nn.Module):
 
 
 class ResidualAttentionBlock(nn.Module):
-    def __init__(self, d_model: int, n_head: int, attn_mask: torch.Tensor = None):
+    def __init__(self, d_model: int, n_head: int, attn_mask: torch.Tensor = None, text_layer=False, design_details=None, i=0):
         super().__init__()
 
         self.attn = nn.MultiheadAttention(d_model, n_head)
@@ -177,30 +178,105 @@ class ResidualAttentionBlock(nn.Module):
         ]))
         self.ln_2 = LayerNorm(d_model)
         self.attn_mask = attn_mask
+        
+        self.layer = i + 1
+        self.rep_tokens_layers = design_details["rep_tokens_layers"]
+        self.text_layer = text_layer
+        self.n_rep_tokens = design_details["n_rep_tokens"]
+        self.model = design_details["model"]
+        self.beta = design_details["beta"]
 
     def attention(self, x: torch.Tensor):
         self.attn_mask = self.attn_mask.to(dtype=x.dtype, device=x.device) if self.attn_mask is not None else None
         return self.attn(x, x, x, need_weights=False, attn_mask=self.attn_mask)[0]
 
-    def forward(self, x: torch.Tensor):
-        x = x + self.attention(self.ln_1(x))
-        x = x + self.mlp(self.ln_2(x))
-        return x
+    def forward(self, inputs: torch.Tensor):
+
+        if self.model == "CLIP":
+            x = inputs
+            x = x + self.attention(self.ln_1(x))
+            x = x + self.mlp(self.ln_2(x))
+            return x
+    
+
+        elif self.model == "MMRLpp":
+            x = inputs[0]
+            compound_rep_tokens = inputs[1]
+            counter = inputs[2]
+            beta = self.beta
+
+            if len(compound_rep_tokens) > 0:
+                if not self.text_layer:
+                    if self.layer in self.rep_tokens_layers:
+
+                        visual_context = compound_rep_tokens[counter]
+                        visual_context = visual_context.expand(x.shape[1], -1, -1).permute(1, 0, 2)
+                        
+                        if self.layer == self.rep_tokens_layers[0]:
+                            prefix = x[:1, :, :]
+                            suffix = x[1:, :, :]
+                            x = torch.cat([prefix, visual_context, suffix], dim=0)         
+                        else:
+                            prefix = x[:1, :, :]
+                            rep_tokens_prelayer = x[1:1 + self.n_rep_tokens, :, :]
+                            #rep_tokens_prelayer = 0
+                            suffix = x[1 + self.n_rep_tokens:, :, :]     
+                            x = torch.cat([prefix, beta * visual_context + (1 - beta) * rep_tokens_prelayer, suffix], dim=0)         
+   
+                        counter += 1    
+
+
+                else:
+                    if self.layer in self.rep_tokens_layers:
+
+                        textual_context = compound_rep_tokens[counter]
+                        textual_context = textual_context.expand(x.shape[1], -1, -1).permute(1, 0, 2)   
+
+                        #insert tokens after bot
+                        if self.layer == self.rep_tokens_layers[0]:
+                            width = x.shape[0]
+                            prefix = x[:1, :, :]
+                            suffix = x[1:, :, :]
+                            x = torch.cat([prefix, textual_context, suffix], dim=0) 
+                        else:
+                            width = x.shape[0] - self.n_rep_tokens
+                            prefix = x[:1, :, :]
+                            rep_tokens_prelayer = x[1:1 + self.n_rep_tokens, :, :]
+                            #rep_tokens_prelayer = 0
+                            suffix = x[1 + self.n_rep_tokens:, :, :]       
+                            x = torch.cat([prefix, beta * textual_context + (1 - beta) * rep_tokens_prelayer, suffix], dim=0)          
+
+                        counter += 1    
+
+                    if self.layer >= self.rep_tokens_layers[0]:
+                        width = x.shape[0]
+                        self.attn_mask = torch.empty(width, width)
+                        self.attn_mask.fill_(float("-inf"))
+                        self.attn_mask.triu_(1)  # zero out the lower diagonal  
+                
+            x = x + self.attention(self.ln_1(x))
+            x = x + self.mlp(self.ln_2(x))
+
+
+            return [x, compound_rep_tokens, counter] # return again as a list, so that nn.seq can work   
+      
+
 
 
 class Transformer(nn.Module):
-    def __init__(self, width: int, layers: int, heads: int, attn_mask: torch.Tensor = None):
+    def __init__(self, width: int, layers: int, heads: int, attn_mask: torch.Tensor = None, text_layer=False, design_details=None):
         super().__init__()
         self.width = width
         self.layers = layers
-        self.resblocks = nn.Sequential(*[ResidualAttentionBlock(width, heads, attn_mask) for _ in range(layers)])
+        self.resblocks = nn.Sequential(*[ResidualAttentionBlock(width, heads, attn_mask, text_layer, design_details, i) for i in range(layers)])
 
     def forward(self, x: torch.Tensor):
         return self.resblocks(x)
 
 
+
 class VisionTransformer(nn.Module):
-    def __init__(self, input_resolution: int, patch_size: int, width: int, layers: int, heads: int, output_dim: int):
+    def __init__(self, input_resolution: int, patch_size: int, width: int, layers: int, heads: int, output_dim: int, design_details):
         super().__init__()
         self.input_resolution = input_resolution
         self.output_dim = output_dim
@@ -210,13 +286,25 @@ class VisionTransformer(nn.Module):
         self.class_embedding = nn.Parameter(scale * torch.randn(width))
         self.positional_embedding = nn.Parameter(scale * torch.randn((input_resolution // patch_size) ** 2 + 1, width))
         self.ln_pre = LayerNorm(width)
-
-        self.transformer = Transformer(width, layers, heads)
+        self.transformer = Transformer(width, layers, heads, design_details=design_details)
 
         self.ln_post = LayerNorm(width)
         self.proj = nn.Parameter(scale * torch.randn(width, output_dim))
 
-    def forward(self, x: torch.Tensor):
+        lora_dim = design_details["proj_lora_dim"]
+        self.A = nn.Parameter(torch.zeros(width, lora_dim))
+        nn.init.kaiming_uniform_(self.A, a=math.sqrt(5))
+        self.B = nn.Parameter(torch.zeros(lora_dim, output_dim))
+
+        self.model = design_details["model"]
+
+    def forward(self, inputs):
+        if self.model == "CLIP":
+            x = inputs
+        elif self.model == "MMRLpp":
+            x = inputs[0]
+            compound_rep_tokens = inputs[1]
+
         x = self.conv1(x)  # shape = [*, width, grid, grid]
         x = x.reshape(x.shape[0], x.shape[1], -1)  # shape = [*, width, grid ** 2]
         x = x.permute(0, 2, 1)  # shape = [*, grid ** 2, width]
@@ -225,15 +313,32 @@ class VisionTransformer(nn.Module):
         x = self.ln_pre(x)
 
         x = x.permute(1, 0, 2)  # NLD -> LND
-        x = self.transformer(x)
+        if self.model == "CLIP":
+            outputs = self.transformer(x)
+            x = outputs
+        elif self.model == "MMRLpp":
+            outputs = self.transformer([x, compound_rep_tokens, 0])
+            x = outputs[0]
+
         x = x.permute(1, 0, 2)  # LND -> NLD
 
-        x = self.ln_post(x[:, 0, :])
-
         if self.proj is not None:
+            if self.model == "MMRLpp":
+                n_tokens= compound_rep_tokens[0].shape[0]
+                x_rep = self.ln_post(x[:, 1:1+n_tokens, :])
+                x_rep = x_rep.mean(dim=1)
+                proj_rep = self.proj + (self.A @ self.B)
+                x_rep = x_rep @ proj_rep
+                
+            x = self.ln_post(x[:, 0, :])
             x = x @ self.proj
+    
+        if self.model == "CLIP":     
+            return x
+        else:
+            return x, x_rep
 
-        return x
+
 
 
 class CLIP(nn.Module):
@@ -249,7 +354,8 @@ class CLIP(nn.Module):
                  vocab_size: int,
                  transformer_width: int,
                  transformer_heads: int,
-                 transformer_layers: int
+                 transformer_layers: int,
+                 design_details
                  ):
         super().__init__()
 
@@ -272,14 +378,17 @@ class CLIP(nn.Module):
                 width=vision_width,
                 layers=vision_layers,
                 heads=vision_heads,
-                output_dim=embed_dim
+                output_dim=embed_dim,
+                design_details=design_details
             )
 
         self.transformer = Transformer(
             width=transformer_width,
             layers=transformer_layers,
             heads=transformer_heads,
-            attn_mask=self.build_attention_mask()
+            attn_mask=self.build_attention_mask(),
+            text_layer=True,
+            design_details=design_details
         )
 
         self.vocab_size = vocab_size
@@ -392,8 +501,11 @@ def convert_weights(model: nn.Module):
     model.apply(_convert_weights_to_fp16)
 
 
-def build_model(state_dict: dict):
+def build_model_MMRLpp(state_dict: dict, design_details):
     vit = "visual.proj" in state_dict
+
+    model = design_details["model"]
+    assert model in ["MMRL", "MMRLpp", "CLIP"], "Your model must be in MMRL, MMRLpp or CLIP "
 
     if vit:
         vision_width = state_dict["visual.conv1.weight"].shape[0]
@@ -420,7 +532,7 @@ def build_model(state_dict: dict):
     model = CLIP(
         embed_dim,
         image_resolution, vision_layers, vision_width, vision_patch_size,
-        context_length, vocab_size, transformer_width, transformer_heads, transformer_layers
+        context_length, vocab_size, transformer_width, transformer_heads, transformer_layers, design_details
     )
 
     for key in ["input_resolution", "context_length", "vocab_size"]:
@@ -428,5 +540,5 @@ def build_model(state_dict: dict):
             del state_dict[key]
 
     convert_weights(model)
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict, strict=False)
     return model.eval()

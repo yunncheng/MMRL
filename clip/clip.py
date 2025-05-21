@@ -10,6 +10,9 @@ from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normal
 from tqdm import tqdm
 
 from .model import build_model
+from .model_mmrl import build_model_MMRL
+from .model_mmrlpp import build_model_MMRLpp
+
 from .simple_tokenizer import SimpleTokenizer as _Tokenizer
 
 try:

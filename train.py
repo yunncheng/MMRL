@@ -26,6 +26,7 @@ import datasets.imagenet_a
 import datasets.imagenet_r
 
 import trainers.mmrl
+import trainers.mmrlpp
 
 def print_args(args, cfg):
     print("***************")
@@ -88,18 +89,28 @@ def extend_cfg(cfg):
         cfg.TRAINER.MY_MODEL.PARAM_C = False
     """
 
-
-
     cfg.TRAINER.MMRL = CN()
-    cfg.TRAINER.MMRL.SCALE = 0.5
-    cfg.TRAINER.MMRL.REG_WEIGHT = 10.0
+    cfg.TRAINER.MMRL.ALPHA = 0.7
+    cfg.TRAINER.MMRL.REG_WEIGHT = 1.0
     cfg.TRAINER.MMRL.REP_LAYERS = []
-    cfg.TRAINER.MMRL.REP_DIM = 1024
-    cfg.TRAINER.MMRL.N_REP_TOKENS = 2  # number of representation tokens per layer
+    cfg.TRAINER.MMRL.REP_DIM = 512
+    cfg.TRAINER.MMRL.N_REP_TOKENS = 5  # number of representation tokens per layer
     cfg.TRAINER.MMRL.PREC = "fp16"  # fp16, fp32, amp
     cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
     cfg.TASK = "B2N" #B2N, CD, FS
 
+    cfg.TRAINER.MMRLpp = CN()
+    cfg.TRAINER.MMRLpp.ALPHA = 0.7
+    cfg.TRAINER.MMRLpp.BETA = 0.9
+    cfg.TRAINER.MMRLpp.REG_WEIGHT = 1.0
+    cfg.TRAINER.MMRLpp.REP_LAYERS = []
+    cfg.TRAINER.MMRLpp.REP_DIM = 512
+    cfg.TRAINER.MMRLpp.N_REP_TOKENS = 5  # number of representation tokens per layer
+    cfg.TRAINER.MMRLpp.PROJ_LORA_DIM = 64
+    cfg.TRAINER.MMRLpp.RES_LORA_DIM = 4
+    cfg.TRAINER.MMRLpp.PREC = "fp16"  # fp16, fp32, amp
+    cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
+    cfg.TASK = "B2N" #B2N, CD, FS
 
 
 def setup_cfg(args):
@@ -118,7 +129,7 @@ def setup_cfg(args):
     reset_cfg(cfg, args)
 
     # 4. Override dataset specific config
-    cfg.merge_from_list(get_dataset_specified_config(cfg.DATASET.NAME))
+    cfg.merge_from_list(get_dataset_specified_config(dataset=cfg.DATASET.NAME, trainer=cfg.TRAINER.NAME, task=args.opts[args.opts.index('TASK') + 1]))
 
     # 5. From optional input arguments
     cfg.merge_from_list(args.opts)
@@ -151,7 +162,7 @@ def main(args):
 
     if not args.no_train:
         trainer.train()
-
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
