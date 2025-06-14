@@ -134,14 +134,12 @@ It achieves stronger generalization with fewer trainable parameters while mainta
 If you find this repository useful for your research, please consider citing:  
 
 ```bibtex
-@misc{guo2025mmrlmultimodalrepresentationlearning,
-      title={MMRL: Multi-Modal Representation Learning for Vision-Language Models}, 
-      author={Yuncheng Guo and Xiaodong Gu},
-      year={2025},
-      eprint={2503.08497},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2503.08497}, 
+@inproceedings{guo2025mmrl,
+      title={Mmrl: Multi-modal representation learning for vision-language models},
+      author={Guo, Yuncheng and Gu, Xiaodong},
+      booktitle={Proceedings of the Computer Vision and Pattern Recognition Conference},
+      pages={25015--25025},
+      year={2025}
 }
 
 @misc{guo2025mmrlparameterefficientinteractionawarerepresentation,
