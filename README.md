@@ -8,13 +8,17 @@ and our arXiv extension:
 📄 [MMRL Paper Link](https://arxiv.org/abs/2503.08497)  
 📄 [MMRL++ Paper Link](https://arxiv.org/abs/2505.10088)
 
-## 📰 News
+
+
+
+## 📢 News
 
 - 🗓️ 2025/05/21: MMRL++ code is released!  
 - 🗓️ 2025/05/15: MMRL++ arXiv version is available.  
 - 🗓️ 2025/03/11: MMRL arXiv version is available.  
 - 🗓️ 2025/03/04: MMRL code is released!  
 - 🗓️ 2025/02/27: MMRL is accepted by CVPR 2025 🎉  
+
 
 
 ## 🔧 Installation  
@@ -128,6 +132,16 @@ MMRL++ is an extension of MMRL that introduces:
 It achieves stronger generalization with fewer trainable parameters while maintaining or improving performance across multiple benchmarks.
 
 📄 Read the MMRL++ paper here: [https://arxiv.org/abs/2505.10088](https://arxiv.org/abs/2505.10088)
+
+
+
+## 🧩 Model Zoo
+
+You can find the trained MMRL and MMRL++ model weights and corresponding log files at [Model / Logs](https://drive.google.com/drive/folders/1z_iKB8bNCzpZHI_jf_cWzrAn0J8d_5-Y?usp=sharing).
+
+**Please Note:** We have fixed some naming bugs in the code while uploading the weights. Therefore, if you wish to use our trained weights, please ensure you are using the latest open-source code.
+
+
 
 ## 📌 Citation  
 
