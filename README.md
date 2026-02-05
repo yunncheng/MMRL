@@ -1,8 +1,8 @@
-# MMRL: Multi-Modal Representation Learning for Vision-Language Models (CVPR2025) & MMRL++: Parameter-Efficient and Interaction-Aware Representation Learning for Vision-Language Models (arXiv)
+# MMRL: Multi-Modal Representation Learning for Vision-Language Models (CVPR2025) & MMRL++: Parameter-Efficient and Interaction-Aware Representation Learning for Vision-Language Models (IJCV2026)
 
 This repository provides the official PyTorch implementation for our CVPR 2025 paper:  
 **MMRL: Multi-Modal Representation Learning for Vision-Language Models**  
-and our arXiv extension:  
+and our IJCV2026 extension:  
 **MMRL++: Parameter-Efficient and Interaction-Aware Representation Learning for Vision-Language Models**
 
 📄 [MMRL Paper Link](https://arxiv.org/abs/2503.08497)  
@@ -13,6 +13,7 @@ and our arXiv extension:
 
 ## 📢 News
 
+- 🗓️ 2025/02/12: MMRL++ is accepted by IJCV 2026 🎉
 - 🗓️ 2025/05/21: MMRL++ code is released!  
 - 🗓️ 2025/05/15: MMRL++ arXiv version is available.  
 - 🗓️ 2025/03/11: MMRL arXiv version is available.  
