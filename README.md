@@ -13,7 +13,7 @@ and our IJCV2026 extension:
 
 ## 📢 News
 
-- 🗓️ 2026/02/12: MMRL++ is accepted by IJCV 2026 🎉
+- 🗓️ 2025/12/02: MMRL++ is accepted by IJCV 2026 🎉
 - 🗓️ 2025/05/21: MMRL++ code is released!  
 - 🗓️ 2025/05/15: MMRL++ arXiv version is available.  
 - 🗓️ 2025/03/11: MMRL arXiv version is available.  
